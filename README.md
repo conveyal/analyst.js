@@ -3,7 +3,7 @@
 Lightweight client library for making requests to Analyst Server
 
 
-### `constructor(L, opts)`
+### `Analyst(L, opts)`
 
 Create an instance of Analyst.js for use with single point requests.
 
@@ -15,6 +15,15 @@ Create an instance of Analyst.js for use with single point requests.
 | `L`       | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged with this. |
 | `opts`    | Object  |                                                                                  |
 
+
+### Example
+
+```js
+const analyst = new Analyst(window.L, {
+  apiUrl: 'http://localhost:3000/api',
+  tileUrl: 'http://localhost:4000/tile'
+})
+```
 
 
 ### `updateSinglePointLayer`
