@@ -23,8 +23,8 @@ const REQUEST_DEFAULTS = {
 /**
  * Create an instance of Analyst.js for use with single point requests.
  *
- * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged with this.
- * @param {Object} opts
+ * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency.
+ * @param {Object} opts Options object.
  * @example
  * const analyst = new Analyst(window.L, {
  *   apiUrl: 'http://localhost:3000/api',
@@ -53,7 +53,7 @@ export default class Analyst {
   /**
    * Update/create the single point layer for this Analyst.js instance.
    *
-   * @return {TileLayer} singlePointLayer
+   * @return {TileLayer} A Leaflet tile layer that pulls in the generated single point tiles.
    * @example
    * analyst.key = 'NEW KEY'
    * analyst.updateSinglePointLayer().redraw()
@@ -74,7 +74,7 @@ export default class Analyst {
   /**
    * Get all of the available shapefiles.
    *
-   * @return {Promise}
+   * @return {Promise} Resolves with a JSON list of shapefiles.
    * @example
    * analyst.shapefiles().then(function (shapefiles) {
    *   console.log(shapefiles)
@@ -96,7 +96,7 @@ export default class Analyst {
    *
    * @param {LatLng} point
    * @param {Object} opts
-   * @return {Promise}
+   * @return {Promise} Resolves with an object containing the tile layer and the results data.
    * @example
    * analyst
    *   .singlePointRequest(marker.getLatLng())

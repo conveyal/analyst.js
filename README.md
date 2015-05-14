@@ -10,10 +10,10 @@ Create an instance of Analyst.js for use with single point requests.
 
 ### Parameters
 
-| parameter | type    | description                                                                      |
-| --------- | ------- | -------------------------------------------------------------------------------- |
-| `L`       | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged with this. |
-| `opts`    | Object  |                                                                                  |
+| parameter | type    | description                                                                            |
+| --------- | ------- | -------------------------------------------------------------------------------------- |
+| `L`       | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency. |
+| `opts`    | Object  | Options object.                                                                        |
 
 
 ### Example
@@ -39,7 +39,7 @@ analyst.updateSinglePointLayer().redraw()
 ```
 
 
-**Returns** `TileLayer`, singlePointLayer
+**Returns** `TileLayer`, A Leaflet tile layer that pulls in the generated single point tiles.
 
 
 ### `shapefiles`
@@ -56,7 +56,7 @@ analyst.shapefiles().then(function (shapefiles) {
 ```
 
 
-**Returns** `Promise`, 
+**Returns** `Promise`, Resolves with a JSON list of shapefiles.
 
 
 ### `singlePointRequest(point, opts)`
@@ -83,7 +83,7 @@ analyst
 ```
 
 
-**Returns** `Promise`, 
+**Returns** `Promise`, Resolves with an object containing the tile layer and the results data.
 
 ## Installation
 
