@@ -20,14 +20,19 @@ const REQUEST_DEFAULTS = {
   bikeTime: 1
 }
 
-export default class Analyst {
-  /**
-   * Create an instance of Analyst.js for use with single point requests.
-   *
-   * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged with this.
-   * @param {Object} opts
-   */
+/**
+ * Create an instance of Analyst.js for use with single point requests.
+ *
+ * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged with this.
+ * @param {Object} opts
+ * @example
+ * const analyst = new Analyst(window.L, {
+ *   apiUrl: 'http://localhost:3000/api',
+ *   tileUrl: 'http://localhost:4000/tile'
+ * })
+ */
 
+export default class Analyst {
   constructor (L, opts = {}) {
     this.apiUrl = opts.apiUrl
     this.tileUrl = opts.tileUrl
