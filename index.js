@@ -1,5 +1,5 @@
 
-const SINGLE_POINT_REQUEST_DEFAULTS = {
+const REQUEST_DEFAULTS = {
   accessModes: 'WALK',
   egressModes: 'WALK',
   fromTime: 25200,
@@ -61,7 +61,7 @@ export default class Analyst {
   }
 
   singlePointRequest (opts = {}) {
-    const options = Object.assign({}, SINGLE_POINT_REQUEST_DEFAULTS, opts)
+    const options = Object.assign({}, REQUEST_DEFAULTS, opts)
 
     return new Promise((resolve, reject) => {
       post(this.apiUrl + '/single', {
