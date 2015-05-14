@@ -46,12 +46,7 @@
       .on('dragend', function (e) {
         var ll = marker.getLatLng()
         analyst
-          .singlePointRequest({
-            fromLat: ll.lat,
-            fromLon: ll.lng,
-            toLat: ll.lat,
-            toLon: ll.lng
-          })
+          .singlePointRequest(ll)
           .then(function (response) {
             if (first) {
               response.tileLayer.addTo(map)

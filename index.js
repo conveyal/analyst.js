@@ -21,6 +21,13 @@ const REQUEST_DEFAULTS = {
 }
 
 export default class Analyst {
+  /**
+   * Create an instance of Analyst.js for use with single point requests.
+   *
+   * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged with this.
+   * @param {Object} opts
+   */
+
   constructor (L, opts = {}) {
     this.apiUrl = opts.apiUrl
     this.tileUrl = opts.tileUrl
@@ -38,6 +45,15 @@ export default class Analyst {
     this.tileLayerOptions = {}
   }
 
+  /**
+   * Update/create the single point layer for this Analyst.js instance.
+   *
+   * @return {TileLayer} singlePointLayer
+   * @example
+   * analyst.key = 'NEW KEY'
+   * analyst.updateSinglePointLayer().redraw()
+   */
+
   updateSinglePointLayer () {
     const url = `${this.tileUrl}/single/${this.key}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
 
@@ -50,6 +66,16 @@ export default class Analyst {
     return this.singlePointLayer
   }
 
+  /**
+   * Get all of the available shapefiles.
+   *
+   * @return {Promise}
+   * @example
+   * analyst.shapefiles().then(function (shapefiles) {
+   *   console.log(shapefiles)
+   * })
+   */
+
   shapefiles () {
     return new Promise((resolve, reject) => {
       window.fetch(this.apiUrl + '/shapefiles')
@@ -60,8 +86,25 @@ export default class Analyst {
     })
   }
 
-  singlePointRequest (opts = {}) {
+  /**
+   * Run a single point request and generate a tile layer.
+   *
+   * @param {LatLng} point
+   * @param {Object} opts
+   * @return {Promise}
+   * @example
+   * analyst
+   *   .singlePointRequest(marker.getLatLng())
+   *   .then(function (response) {
+   *     response.tileLayer.addTo(map)
+   *   })
+   */
+
+  singlePointRequest (point, opts = {}) {
     const options = Object.assign({}, REQUEST_DEFAULTS, opts)
+
+    options.fromLat = options.toLat = point.lat
+    options.fromLng = options.toLng = point.lng
 
     return new Promise((resolve, reject) => {
       post(this.apiUrl + '/single', {

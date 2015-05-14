@@ -10,6 +10,7 @@
   },
   "scripts": {
     "develop": "watchify -v -s Analyst index.js -o test/analyst.js",
+    "docs": "dox -r < index.js | doxme --readme > README.md",
     "lint": "standard index.js",
     "release": "browserify -s Analyst index.js > analyst.js",
     "test": "serve test"
