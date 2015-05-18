@@ -9,10 +9,10 @@
     ]
   },
   "scripts": {
-    "develop": "watchify -v -s Analyst index.js -o test/analyst.js",
+    "build": "browserify -s Analyst index.js > analyst.js",
+    "develop": "watchify -v -s Analyst index.js -o analyst.js",
     "docs": "dox -r < index.js | doxme --readme > README.md",
     "lint": "standard index.js",
-    "release": "browserify -s Analyst index.js > analyst.js",
     "test": "serve test"
   },
   "repository": {

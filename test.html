@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
-  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+  <script src="node_modules/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.polyfill.io/v1/polyfill.min.js"></script>
 
   <style>
@@ -24,36 +24,39 @@
   <script>
     var Analyst = window.Analyst
     var analyst = new Analyst(window.L, {
-      apiUrl: '',
-      tileUrl: '',
-      destinationPointsetId: '',
-      graphId: ''
+      apiUrl: 'http://mit-analyst.dev.conveyal.com/api',
+      tileUrl: 'http://mit-analyst.dev.conveyal.com/tile',
+      shapefileId: '0579b6bd8e14ec69e4f21e96527a684b_376500e5f8ac23d1664902fbe2ffc364',
+      graphId: '94de64a1a8762769b7d50d0bda3d5763',
+      showIso: true
     })
 
     var startLoc = [42.35, -71.1]
 
-    var map = L.map('map').setView(startLoc, 11)
+    var map = L.map('map').setView(startLoc, 12)
 
     // add an OpenStreetMap tile layer
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map)
 
-    var first = true
+    // store ISO layer
+    var isoLayer = null
+
     var marker = L
       .marker(startLoc, {
         draggable: true
       })
       .addTo(map)
       .on('dragend', function (e) {
-        var ll = marker.getLatLng()
         analyst
-          .singlePointRequest(ll)
+          .singlePointRequest(marker.getLatLng())
           .then(function (response) {
-            if (first) {
-              response.tileLayer.addTo(map)
-              console.log(response.results)
-              first = false
+            if (isoLayer) {
+              isoLayer.redraw()
             } else {
-              response.tileLayer.redraw()
+              isoLayer = response.tileLayer
+              isoLayer
+                .addTo(map)
+                .bringToFront()
             }
           })
           .catch(function (err) {

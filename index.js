@@ -1,7 +1,10 @@
 
+const LAYER_DEFAULTS = {}
+
 const REQUEST_DEFAULTS = {
   accessModes: 'WALK',
   egressModes: 'WALK',
+  date: new Date().toISOString().split('T')[0],
   fromTime: 25200,
   toTime: 32400,
   walkSpeed: 1.3333333333333333,
@@ -37,7 +40,7 @@ export default class Analyst {
     this.apiUrl = opts.apiUrl
     this.tileUrl = opts.tileUrl
 
-    this.destinationPointsetId = opts.destinationPointsetId
+    this.shapefileId = opts.shapefileId
     this.graphId = opts.graphId
     this.profile = opts.profile === undefined ? true : opts.profile
 
@@ -47,7 +50,9 @@ export default class Analyst {
     this.showIso = !!opts.showIso
 
     this.L = L
-    this.tileLayerOptions = {}
+
+    this.requestOptions = Object.assign({}, REQUEST_DEFAULTS, opts.requestOptions)
+    this.tileLayerOptions = Object.assign({}, LAYER_DEFAULTS, opts.tileLayerOptions)
   }
 
   /**
@@ -82,13 +87,7 @@ export default class Analyst {
    */
 
   shapefiles () {
-    return new Promise((resolve, reject) => {
-      window.fetch(this.apiUrl + '/shapefiles')
-        .then((response) => {
-          resolve(response.json())
-        })
-        .catch(reject)
-    })
+    return window.fetch(this.apiUrl + '/shapefiles').then(r => r.json())
   }
 
   /**
@@ -106,29 +105,33 @@ export default class Analyst {
    */
 
   singlePointRequest (point, opts = {}) {
-    const options = Object.assign({}, REQUEST_DEFAULTS, opts)
+    const options = Object.assign({}, this.requestOptions, opts)
+
+    if (!point) return Promise.reject(new Error('Lat/lng point required.'))
 
     options.fromLat = options.toLat = point.lat
-    options.fromLng = options.toLng = point.lng
+    options.fromLon = options.toLon = point.lng
 
-    return new Promise((resolve, reject) => {
-      post(this.apiUrl + '/single', {
-          destinationPointsetId: this.destinationPointsetId,
-          graphId: this.graphId,
-          profile: this.profile,
-          options: options
-        })
-        .then((response) => {
-          const data = response.json()
-          this.key = data.key
+    if (!this.shapefileId) return Promise.reject(new Error('Shapefile ID required'))
+    if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
 
-          resolve({
-            tileLayer: this.updateSinglePointLayer(),
-            results: data
-          })
-        })
-        .catch(reject)
-    })
+    return post(this.apiUrl + '/single', {
+        destinationPointsetId: this.shapefileId,
+        graphId: this.graphId,
+        profile: this.profile,
+        options: options
+      })
+      .then((response) => {
+        return response.json()
+      })
+      .then((data) => {
+        this.key = data.key
+
+        return {
+          tileLayer: this.updateSinglePointLayer(),
+          results: data
+        }
+      })
   }
 }
 
