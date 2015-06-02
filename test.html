@@ -48,7 +48,18 @@
       .addTo(map)
       .on('dragend', function (e) {
         analyst
-          .singlePointRequest(marker.getLatLng())
+          .singlePointRequest(marker.getLatLng(), {
+            scenario: {
+              id: 0,
+              description: 'No description',
+              modifications: [{
+                  type: 'remove-trip',
+                  agencyId: '1',
+                  routeId: ['93c4f45', '80d18a0', '552cc30', 'e003fda', '1f80529', 'ee48237', 'b41473f', '8d71159', 'e023f68', '575aa59', '101d7e7'],
+                  tripId: null
+              }]
+            }
+          })
           .then(function (response) {
             if (isoLayer) {
               isoLayer.redraw()
