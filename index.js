@@ -1,4 +1,5 @@
 import dbg from 'debug'
+import http from 'http'
 
 const LAYER_DEFAULTS = {}
 
@@ -137,9 +138,6 @@ export default class Analyst {
         profile: this.profile,
         options: options
       })
-      .then((response) => {
-        return response.json()
-      })
       .then((data) => {
         debug('single point request successful')
         this.key = data.key
@@ -152,13 +150,38 @@ export default class Analyst {
   }
 }
 
+const getHostPortAndPath = new RegExp('^(.*)://([A-Za-z0-9\-\.]+)(:[0-9]+)?(.*)$')
 function post (url, data) {
-  return window.fetch(url, {
-    method: 'post',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
+  return new Promise((resolve, reject) => {
+    const [, , host, port, path] = url.match(getHostPortAndPath)
+
+    const params = {
+      host,
+      path,
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      withCredentials: false
+    }
+
+    if (port !== undefined) params.port = port
+
+    debug('POST', params)
+    const req = http.request(params, (res) => {
+      let data = ''
+      res.on('error', reject)
+      res.on('data', (chunk) => {
+        data += chunk
+      })
+      res.on('close', () => {
+        resolve(JSON.parse(data))
+      })
+    })
+
+    req.on('error', reject)
+    req.write(JSON.stringify(data))
+    req.end()
   })
 }
