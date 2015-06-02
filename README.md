@@ -3,17 +3,28 @@
 Lightweight client library for making requests to Analyst Server
 
 
-### `Analyst(L, opts)`
+### `Analyst(L, options, [options.apiUrl], [options.tileUrl], [options.shapefileId], [options.graphId], [options.profile], [options.connectivityType], [options.timeLimit], [options.showPoints], [options.showIso], [options.requestOptions], [options.tileLayerOptions])`
 
 Create an instance of Analyst.js for use with single point requests.
 
 
 ### Parameters
 
-| parameter | type    | description                                                                            |
-| --------- | ------- | -------------------------------------------------------------------------------------- |
-| `L`       | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency. |
-| `opts`    | Object  | Options object.                                                                        |
+| parameter                    | type    | description                                                                            |
+| ---------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `L`                          | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency. |
+| `options`                    | Object  | Options object.                                                                        |
+| `[options.apiUrl]`           | String  | _optional:_                                                                            |
+| `[options.tileUrl]`          | String  | _optional:_                                                                            |
+| `[options.shapefileId]`      | String  | _optional:_                                                                            |
+| `[options.graphId]`          | String  | _optional:_                                                                            |
+| `[options.profile]`          | Boolean | _optional:_ Defaults to true                                                           |
+| `[options.connectivityType]` | String  | _optional:_                                                                            |
+| `[options.timeLimit]`        | Number  | _optional:_ Defaults to 3600                                                           |
+| `[options.showPoints]`       | Boolean | _optional:_ Defaults to false                                                          |
+| `[options.showIso]`          | Boolean | _optional:_ Defaults to true                                                           |
+| `[options.requestOptions]`   | Object  | _optional:_ Pass in default request options to be used.                                |
+| `[options.tileLayerOptions]` | Object  | _optional:_ Pass in default tileLayerOptions to use.                                   |
 
 
 ### Example
@@ -59,17 +70,17 @@ analyst.shapefiles().then(function (shapefiles) {
 **Returns** `Promise`, Resolves with a JSON list of shapefiles.
 
 
-### `singlePointRequest(point, opts)`
+### `singlePointRequest(point, options)`
 
 Run a single point request and generate a tile layer.
 
 
 ### Parameters
 
-| parameter | type   | description |
-| --------- | ------ | ----------- |
-| `point`   | LatLng |             |
-| `opts`    | Object |             |
+| parameter | type   | description     |
+| --------- | ------ | --------------- |
+| `point`   | LatLng |                 |
+| `options` | Object | Options object. |
 
 
 ### Example
