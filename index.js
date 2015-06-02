@@ -1,3 +1,4 @@
+import dbg from 'debug'
 
 const LAYER_DEFAULTS = {}
 
@@ -23,11 +24,24 @@ const REQUEST_DEFAULTS = {
   bikeTime: 1
 }
 
+const debug = dbg('analyst.js')
+
 /**
  * Create an instance of Analyst.js for use with single point requests.
  *
  * @param {Leaflet} L Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency.
- * @param {Object} opts Options object.
+ * @param {Object} options Options object.
+ * @param {String} [options.apiUrl]
+ * @param {String} [options.tileUrl]
+ * @param {String} [options.shapefileId]
+ * @param {String} [options.graphId]
+ * @param {Boolean} [options.profile] Defaults to true
+ * @param {String} [options.connectivityType]
+ * @param {Number} [options.timeLimit] Defaults to 3600
+ * @param {Boolean} [options.showPoints] Defaults to false
+ * @param {Boolean} [options.showIso] Defaults to true
+ * @param {Object} [options.requestOptions] Pass in default request options to be used.
+ * @param {Object} [options.tileLayerOptions] Pass in default tileLayerOptions to use.
  * @example
  * const analyst = new Analyst(window.L, {
  *   apiUrl: 'http://localhost:3000/api',
@@ -68,8 +82,10 @@ export default class Analyst {
     const url = `${this.tileUrl}/single/${this.key}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
 
     if (!this.singlePointLayer) {
+      debug(`creating single point layer with url: ${url}`)
       this.singlePointLayer = this.L.tileLayer(url, this.tileLayerOptions)
     } else {
+      debug(`updating single point layer to url: ${url}`)
       this.singlePointLayer.setUrl(url)
     }
 
@@ -87,6 +103,7 @@ export default class Analyst {
    */
 
   shapefiles () {
+    debug('fetching available shapefiles')
     return window.fetch(this.apiUrl + '/shapefiles').then(r => r.json())
   }
 
@@ -94,7 +111,7 @@ export default class Analyst {
    * Run a single point request and generate a tile layer.
    *
    * @param {LatLng} point
-   * @param {Object} opts
+   * @param {Object} options Options object.
    * @return {Promise} Resolves with an object containing the tile layer and the results data.
    * @example
    * analyst
@@ -105,16 +122,15 @@ export default class Analyst {
    */
 
   singlePointRequest (point, opts = {}) {
-    const options = Object.assign({}, this.requestOptions, opts)
-
     if (!point) return Promise.reject(new Error('Lat/lng point required.'))
-
-    options.fromLat = options.toLat = point.lat
-    options.fromLon = options.toLon = point.lng
-
     if (!this.shapefileId) return Promise.reject(new Error('Shapefile ID required'))
     if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
 
+    const options = Object.assign({}, this.requestOptions, opts)
+    options.fromLat = options.toLat = point.lat
+    options.fromLon = options.toLon = point.lng
+
+    debug(`making single point request to [${point.lng}, ${point.lat}]`, options)
     return post(this.apiUrl + '/single', {
         destinationPointsetId: this.shapefileId,
         graphId: this.graphId,
@@ -125,6 +141,7 @@ export default class Analyst {
         return response.json()
       })
       .then((data) => {
+        debug('single point request successful')
         this.key = data.key
 
         return {

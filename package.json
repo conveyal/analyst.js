@@ -1,6 +1,6 @@
 {
   "name": "analyst.js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Lightweight client library for making requests to Analyst Server",
   "main": "index.js",
   "browserify": {
@@ -13,7 +13,7 @@
     "develop": "./node_modules/.bin/watchify -v -s Analyst index.js -o analyst.js",
     "docs": "./node_modules/.bin/dox -r < index.js | ./node_modules/.bin/doxme --readme > README.md",
     "lint": "./node_modules/.bin/standard index.js",
-    "test": "./node_modules/.bin/serve test"
+    "test": "./node_modules/.bin/serve"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,10 @@
     "doxme": "^1.8.2",
     "leaflet": "^0.7.3",
     "serve": "^1.4.0",
-    "standard": "^3.11.0",
+    "standard": "^4.0.1",
     "watchify": "^0.3.2"
+  },
+  "dependencies": {
+    "debug": "^2.2.0"
   }
 }
