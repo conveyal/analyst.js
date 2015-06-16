@@ -1,4 +1,8 @@
 
+## 0.0.5 — 2015-06-16
+
+* Fix `shapefiles` url
+
 ## 0.0.4 — 2015-06-02
 
 * Use Browserify's `http` module instead of `fetch`

@@ -1,6 +1,6 @@
 {
   "name": "analyst.js",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Lightweight client library for making requests to Analyst Server",
   "main": "index.js",
   "browserify": {
