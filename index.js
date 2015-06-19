@@ -1,3 +1,4 @@
+import concat from 'concat-stream'
 import dbg from 'debug'
 import http from 'http'
 
@@ -148,6 +149,26 @@ export default class Analyst {
         }
       })
   }
+
+  vectorRequest (point, opts = {}) {
+      if (!point) return Promise.reject(new Error('Lat/lng point required.'))
+      if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
+
+      const options = Object.assign({}, this.requestOptions, opts)
+      options.fromLat = options.toLat = point.lat
+      options.fromLon = options.toLon = point.lng
+
+      debug('making vector request to [' + point.lng + ', ' + point.lat + ']', options)
+      return post(this.apiUrl + '/single', {
+        graphId: this.graphId,
+        profile: this.profile,
+        options: options
+      }).then(function (data) {
+        debug('vector request successful')
+
+        return data
+      })
+    }
 }
 
 const getHostPortAndPath = new RegExp('^(.*)://([A-Za-z0-9\-\.]+)(:[0-9]+)?(.*)$')
@@ -170,14 +191,10 @@ function post (url, data) {
 
     debug('POST', params)
     const req = http.request(params, (res) => {
-      let data = ''
       res.on('error', reject)
-      res.on('data', (chunk) => {
-        data += chunk
-      })
-      res.on('close', () => {
+      res.pipe(concat((data) => {
         resolve(JSON.parse(data))
-      })
+      }))
     })
 
     req.on('error', reject)
@@ -189,14 +206,10 @@ function post (url, data) {
 function get (url) {
   return new Promise((resolve, reject) => {
     http.get(url, (res) => {
-      let data = ''
       res.on('error', reject)
-      res.on('data', (chunk) => {
-        data += chunk
-      })
-      res.on('close', () => {
+      res.pipe(concat((data) => {
         resolve(JSON.parse(data))
-      })
+      }))
     }).on('error', reject)
   })
 }

@@ -48,7 +48,7 @@
       .addTo(map)
       .on('dragend', function (e) {
         analyst
-          .singlePointRequest(marker.getLatLng(), {
+          .vectorRequest(marker.getLatLng(), {
             scenario: {
               id: 0,
               description: 'No description',
