@@ -96,6 +96,33 @@ analyst
 
 **Returns** `Promise`, Resolves with an object containing the tile layer and the results data.
 
+
+### `vectorRequest(point, options)`
+
+Run a vector request and return a GeoJSON object.
+
+
+### Parameters
+
+| parameter | type   | description     |
+| --------- | ------ | --------------- |
+| `point`   | LatLng |                 |
+| `options` | Object | Options object. |
+
+
+### Example
+
+```js
+analyst
+  .vectorRequest(marker.getLatLng())
+  .then(function (geojson) {
+    L.geoJson(geoJson).addTo(map)
+  })
+```
+
+
+**Returns** `Promise`, Resolves with an object containing the GeoJSON object.
+
 ## Installation
 
 Requires [nodejs](http://nodejs.org/).

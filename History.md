@@ -1,4 +1,9 @@
 
+## 0.0.6 — 2015-06-19
+
+* Use `[concat-stream](https://github.com/maxogden/concat-stream)`
+* Add `vectorRequest` function
+
 ## 0.0.5 — 2015-06-16
 
 * Fix `shapefiles` url

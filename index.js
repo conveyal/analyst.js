@@ -150,6 +150,20 @@ export default class Analyst {
       })
   }
 
+  /**
+   * Run a vector request and return a GeoJSON object.
+   *
+   * @param {LatLng} point
+   * @param {Object} options Options object.
+   * @return {Promise} Resolves with an object containing the GeoJSON object.
+   * @example
+   * analyst
+   *   .vectorRequest(marker.getLatLng())
+   *   .then(function (geojson) {
+   *     L.geoJson(geoJson).addTo(map)
+   *   })
+   */
+
   vectorRequest (point, opts = {}) {
       if (!point) return Promise.reject(new Error('Lat/lng point required.'))
       if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
@@ -158,12 +172,12 @@ export default class Analyst {
       options.fromLat = options.toLat = point.lat
       options.fromLon = options.toLon = point.lng
 
-      debug('making vector request to [' + point.lng + ', ' + point.lat + ']', options)
+      debug(`making vector request to [${point.lng}, ${point.lat}]`, options)
       return post(this.apiUrl + '/single', {
         graphId: this.graphId,
         profile: this.profile,
         options: options
-      }).then(function (data) {
+      }).then((data) => {
         debug('vector request successful')
 
         return data
