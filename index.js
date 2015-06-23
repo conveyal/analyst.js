@@ -81,7 +81,7 @@ export default class Analyst {
    */
 
   updateSinglePointLayer (key1, key2) {
-    if (key2 !== undefined) { 
+    if (key2 !== null) { 
       var keyVals = key2 + '/' + key1;
     } else { 
       var keyVals = key1;
