@@ -81,7 +81,11 @@ export default class Analyst {
    */
 
   updateSinglePointLayer () {
-    const url = `${this.tileUrl}/single/${this.key}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
+    var keyVals = null;
+    if (this.key1) { keyVals = this.key1 + '/' + this.key }
+    else { keyVals = this.key }
+
+    const url = `${this.tileUrl}/single/${keyVals}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
 
     if (!this.singlePointLayer) {
       debug(`creating single point layer with url: ${url}`)
@@ -123,7 +127,7 @@ export default class Analyst {
    *   })
    */
 
-  singlePointRequest (point, opts = {}) {
+  singlePointRequest (point, key1, opts = {}) {
     if (!point) return Promise.reject(new Error('Lat/lng point required.'))
     if (!this.shapefileId) return Promise.reject(new Error('Shapefile ID required'))
     if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
@@ -142,6 +146,8 @@ export default class Analyst {
       .then((data) => {
         debug('single point request successful')
         this.key = data.key
+
+        if (key1) { _this.key1 = key1 }
 
         return {
           tileLayer: this.updateSinglePointLayer(),
