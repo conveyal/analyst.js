@@ -26,9 +26,11 @@
     var analyst = new Analyst(window.L, {
       apiUrl: 'http://mit-analyst.conveyal.com/api',
       tileUrl: 'http://mit-analyst.conveyal.com/tile',
-      shapefileId: '0579b6bd8e14ec69e4f21e96527a684b_376500e5f8ac23d1664902fbe2ffc364',
-      graphId: '786999ef0720eff08c48115c3613de2d',
-      showIso: true
+      showIso: true,
+      requestOptions: {
+        shapefileId: '0579b6bd8e14ec69e4f21e96527a684b_376500e5f8ac23d1664902fbe2ffc364',
+        graphId: '786999ef0720eff08c48115c3613de2d'
+      }
     })
 
     var startLoc = [42.35, -71.1]
@@ -48,23 +50,13 @@
       .addTo(map)
       .on('dragend', function (e) {
         analyst
-          .vectorRequest(marker.getLatLng(), {
-            scenario: {
-              id: 0,
-              description: 'No description',
-              modifications: [{
-                  type: 'remove-trip',
-                  agencyId: '1',
-                  routeId: ['93c4f45', '80d18a0', '552cc30', 'e003fda', '1f80529', 'ee48237', 'b41473f', '8d71159', 'e023f68', '575aa59', '101d7e7'],
-                  tripId: null
-              }]
-            }
-          })
+          .singlePointRequest(marker.getLatLng())
           .then(function (response) {
+            const spl = analyst.updateSinglePointLayer(response.key)
             if (isoLayer) {
               isoLayer.redraw()
             } else {
-              isoLayer = response.tileLayer
+              isoLayer = spl
               isoLayer
                 .addTo(map)
                 .bringToFront()

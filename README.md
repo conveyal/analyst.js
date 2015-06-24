@@ -3,7 +3,7 @@
 Lightweight client library for making requests to Analyst Server
 
 
-### `Analyst(L, options, [options.apiUrl], [options.tileUrl], [options.shapefileId], [options.graphId], [options.profile], [options.connectivityType], [options.timeLimit], [options.showPoints], [options.showIso], [options.requestOptions], [options.tileLayerOptions])`
+### `Analyst(L, options, [options.apiUrl], [options.tileUrl], [options.connectivityType], [options.timeLimit], [options.showPoints], [options.showIso], [options.requestOptions], [options.tileLayerOptions])`
 
 Create an instance of Analyst.js for use with single point requests.
 
@@ -16,9 +16,6 @@ Create an instance of Analyst.js for use with single point requests.
 | `options`                    | Object  | Options object.                                                                        |
 | `[options.apiUrl]`           | String  | _optional:_                                                                            |
 | `[options.tileUrl]`          | String  | _optional:_                                                                            |
-| `[options.shapefileId]`      | String  | _optional:_                                                                            |
-| `[options.graphId]`          | String  | _optional:_                                                                            |
-| `[options.profile]`          | Boolean | _optional:_ Defaults to true                                                           |
 | `[options.connectivityType]` | String  | _optional:_                                                                            |
 | `[options.timeLimit]`        | Number  | _optional:_ Defaults to 3600                                                           |
 | `[options.showPoints]`       | Boolean | _optional:_ Defaults to false                                                          |
@@ -37,16 +34,23 @@ const analyst = new Analyst(window.L, {
 ```
 
 
-### `updateSinglePointLayer`
+### `updateSinglePointLayer(key, [comparisonKey])`
 
 Update/create the single point layer for this Analyst.js instance.
+
+
+### Parameters
+
+| parameter         | type   | description                                       |
+| ----------------- | ------ | ------------------------------------------------- |
+| `key`             | String | Key for accessing the single point layer tiles.   |
+| `[comparisonKey]` | String | _optional:_ Key for the layer to compare against. |
 
 
 ### Example
 
 ```js
-analyst.key = 'NEW KEY'
-analyst.updateSinglePointLayer().redraw()
+analyst.updateSinglePointLayer(key).redraw()
 ```
 
 
@@ -70,17 +74,19 @@ analyst.shapefiles().then(function (shapefiles) {
 **Returns** `Promise`, Resolves with a JSON list of shapefiles.
 
 
-### `singlePointRequest(point, options)`
+### `singlePointRequest(point, graphId, [shapefileId], [options])`
 
 Run a single point request and generate a tile layer.
 
 
 ### Parameters
 
-| parameter | type   | description     |
-| --------- | ------ | --------------- |
-| `point`   | LatLng |                 |
-| `options` | Object | Options object. |
+| parameter       | type   | description                                                                                 |
+| --------------- | ------ | ------------------------------------------------------------------------------------------- |
+| `point`         | LatLng |                                                                                             |
+| `graphId`       | String | Graph ID to use for this request.                                                           |
+| `[shapefileId]` | String | _optional:_ Shapefile ID to be used with this request, can be omitted for a vector request. |
+| `[options]`     | Object | _optional:_ Options object.                                                                 |
 
 
 ### Example
@@ -88,40 +94,41 @@ Run a single point request and generate a tile layer.
 ```js
 analyst
   .singlePointRequest(marker.getLatLng())
-  .then(function (response) {
-    response.tileLayer.addTo(map)
+  .then(function (data) {
+    analyst.updateSinglePointLayer(data.key)
   })
 ```
 
 
-**Returns** `Promise`, Resolves with an object containing the tile layer and the results data.
+**Returns** `Promise`, Resolves with an object containing the results data.
 
 
-### `vectorRequest(point, options)`
+### `singlePointComparison(point, options, comparisonOptions)`
 
-Run a vector request and return a GeoJSON object.
+Compare two scenarios.
 
 
 ### Parameters
 
-| parameter | type   | description     |
-| --------- | ------ | --------------- |
-| `point`   | LatLng |                 |
-| `options` | Object | Options object. |
+| parameter           | type   | description |
+| ------------------- | ------ | ----------- |
+| `point`             | LatLng |             |
+| `options`           | Object |             |
+| `comparisonOptions` | Object |             |
 
 
 ### Example
 
 ```js
 analyst
-  .vectorRequest(marker.getLatLng())
-  .then(function (geojson) {
-    L.geoJson(geoJson).addTo(map)
+  .singlePointComparison(marker.getLatLng(), { graphId: 'graph1' }, { graphId: 'graph2' })
+  .then(([res, cres]) => {
+    analyst.updateSinglePointLayer(res.key, cres.key)
   })
 ```
 
 
-**Returns** `Promise`, Resolves with an object containing the GeoJSON object.
+**Returns** `Promise`, Resolves with an array containing `[results, comparisonResults]`
 
 ## Installation
 

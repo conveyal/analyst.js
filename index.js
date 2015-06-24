@@ -35,9 +35,6 @@ const debug = dbg('analyst.js')
  * @param {Object} options Options object.
  * @param {String} [options.apiUrl]
  * @param {String} [options.tileUrl]
- * @param {String} [options.shapefileId]
- * @param {String} [options.graphId]
- * @param {Boolean} [options.profile] Defaults to true
  * @param {String} [options.connectivityType]
  * @param {Number} [options.timeLimit] Defaults to 3600
  * @param {Boolean} [options.showPoints] Defaults to false
@@ -56,10 +53,6 @@ export default class Analyst {
     this.apiUrl = opts.apiUrl
     this.tileUrl = opts.tileUrl
 
-    this.shapefileId = opts.shapefileId
-    this.graphId = opts.graphId
-    this.profile = opts.profile === undefined ? true : opts.profile
-
     this.connectivityType = opts.connectivityType || 'AVERAGE'
     this.timeLimit = opts.timeLimit || 3600
     this.showPoints = !!opts.showPoints
@@ -74,20 +67,20 @@ export default class Analyst {
   /**
    * Update/create the single point layer for this Analyst.js instance.
    *
+   * @param {String} key Key for accessing the single point layer tiles.
+   * @param {String} [comparisonKey] Key for the layer to compare against.
    * @return {TileLayer} A Leaflet tile layer that pulls in the generated single point tiles.
    * @example
-   * analyst.key = 'NEW KEY'
-   * analyst.updateSinglePointLayer().redraw()
+   * analyst.updateSinglePointLayer(key).redraw()
    */
 
-  updateSinglePointLayer (key1, key2) {
-    if (key2 !== null) { 
-      var keyVals = key2 + '/' + key1;
-    } else { 
-      var keyVals = key1;
+  updateSinglePointLayer (key, comparisonKey) {
+    let keyVal = key
+    if (comparisonKey) {
+      keyVal = comparisonKey + '/' + keyVal
     }
 
-    const url = `${this.tileUrl}/single/${keyVals}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
+    const url = `${this.tileUrl}/single/${keyVal}/{z}/{x}/{y}.png?which=${this.connectivityType}&timeLimit=${this.timeLimit}&showPoints=${this.showPoints}&showIso=${this.showIso}`
 
     if (!this.singlePointLayer) {
       debug(`creating single point layer with url: ${url}`)
@@ -119,76 +112,63 @@ export default class Analyst {
    * Run a single point request and generate a tile layer.
    *
    * @param {LatLng} point
-   * @param {Object} options Options object.
-   * @return {Promise} Resolves with an object containing the tile layer and the results data.
+   * @param {String} graphId Graph ID to use for this request.
+   * @param {String} [shapefileId] Shapefile ID to be used with this request, can be omitted for a vector request.
+   * @param {Object} [options] Options object.
+   * @return {Promise} Resolves with an object containing the results data.
    * @example
    * analyst
    *   .singlePointRequest(marker.getLatLng())
-   *   .then(function (response) {
-   *     response.tileLayer.addTo(map)
+   *   .then(function (data) {
+   *     analyst.updateSinglePointLayer(data.key)
    *   })
    */
 
-  singlePointRequest (point, compareKey, opts = {}) {
+  singlePointRequest (point, graphId, shapefileId, options = {}) {
     if (!point) return Promise.reject(new Error('Lat/lng point required.'))
-    if (!this.shapefileId) return Promise.reject(new Error('Shapefile ID required'))
-    if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
+    if (typeof shapefileId === 'object') {
+      options = shapefileId
+      shapefileId = undefined
+    }
 
-    const options = Object.assign({}, this.requestOptions, opts)
-    options.fromLat = options.toLat = point.lat
-    options.fromLon = options.toLon = point.lng
+    const opts = Object.assign({}, this.requestOptions, options)
+    opts.fromLat = opts.toLat = point.lat
+    opts.fromLon = opts.toLon = point.lng
 
-    debug(`making single point request to [${point.lng}, ${point.lat}]`, options)
+    debug(`making single point request to [${point.lng}, ${point.lat}]`, opts)
     return post(this.apiUrl + '/single', {
-        destinationPointsetId: this.shapefileId,
-        graphId: this.graphId,
-        profile: this.profile,
-        options: options
+        destinationPointsetId: shapefileId,
+        graphId: graphId,
+        profile: opts.profile,
+        options: opts
       })
       .then((data) => {
         debug('single point request successful')
-        this.key = data.key
 
-        return {
-          tileLayer: this.updateSinglePointLayer(this.key, compareKey),
-          results: data
-        }
+        return data
       })
   }
 
   /**
-   * Run a vector request and return a GeoJSON object.
+   * Compare two scenarios.
    *
    * @param {LatLng} point
-   * @param {Object} options Options object.
-   * @return {Promise} Resolves with an object containing the GeoJSON object.
+   * @param {Object} options
+   * @param {Object} comparisonOptions
+   * @return {Promise} Resolves with an array containing `[results, comparisonResults]`
    * @example
    * analyst
-   *   .vectorRequest(marker.getLatLng())
-   *   .then(function (geojson) {
-   *     L.geoJson(geoJson).addTo(map)
+   *   .singlePointComparison(marker.getLatLng(), { graphId: 'graph1' }, { graphId: 'graph2' })
+   *   .then(([res, cres]) => {
+   *     analyst.updateSinglePointLayer(res.key, cres.key)
    *   })
    */
 
-  vectorRequest (point, opts = {}) {
-      if (!point) return Promise.reject(new Error('Lat/lng point required.'))
-      if (!this.graphId) return Promise.reject(new Error('Graph ID required'))
-
-      const options = Object.assign({}, this.requestOptions, opts)
-      options.fromLat = options.toLat = point.lat
-      options.fromLon = options.toLon = point.lng
-
-      debug(`making vector request to [${point.lng}, ${point.lat}]`, options)
-      return post(this.apiUrl + '/single', {
-        graphId: this.graphId,
-        profile: this.profile,
-        options: options
-      }).then((data) => {
-        debug('vector request successful')
-
-        return data
-      })
-    }
+   singlePointComparison (point, options, comparisonOptions) {
+     return Promise.all([
+      this.singlePointRequest(point, options.graphId, options.shapefileId, options),
+      this.singlePointRequest(point, comparisonOptions.graphId, comparisonOptions.shapefileId, comparisonOptions)])
+   }
 }
 
 const getHostPortAndPath = new RegExp('^(.*)://([A-Za-z0-9\-\.]+)(:[0-9]+)?(.*)$')
