@@ -1,4 +1,10 @@
 
+## 0.0.7 — 2015-06-24
+
+* Remove `shapefileId` and `graphId` from default class options. Used on per request basis now.
+* Pass the `key` to `updateSinglePointLayer` as an argument instead of retrieving from the instance.
+* Pass an optional `comparisonKey` to `updateSinglePointLayer` to generate a comparison layer.
+
 ## 0.0.6 — 2015-06-19
 
 * Use `[concat-stream](https://github.com/maxogden/concat-stream)`
