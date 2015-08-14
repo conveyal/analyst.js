@@ -38,7 +38,7 @@
     "leaflet": "^0.7.3",
     "serve": "^1.4.0",
     "standard": "^4.0.1",
-    "watchify": "^0.3.2"
+    "watchify": "^3.2.0"
   },
   "dependencies": {
     "concat-stream": "^1.5.0",

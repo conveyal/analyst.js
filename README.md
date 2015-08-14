@@ -3,7 +3,7 @@
 Lightweight client library for making requests to Analyst Server
 
 
-### `Analyst(L, options, [options.apiUrl], [options.tileUrl], [options.connectivityType], [options.timeLimit], [options.showPoints], [options.showIso], [options.requestOptions], [options.tileLayerOptions])`
+### `Analyst(L, options, [options.baseUrl], [options.apiUrl], [options.tileUrl], [options.connectivityType], [options.timeLimit], [options.showPoints], [options.showIso], [options.requestOptions], [options.tileLayerOptions])`
 
 Create an instance of Analyst.js for use with single point requests.
 
@@ -14,6 +14,7 @@ Create an instance of Analyst.js for use with single point requests.
 | ---------------------------- | ------- | -------------------------------------------------------------------------------------- |
 | `L`                          | Leaflet | Pass in an instance of Leaflet so that it doesn't need to be packaged as a dependency. |
 | `options`                    | Object  | Options object.                                                                        |
+| `[options.baseUrl]`          | String  | _optional:_ The base url, will set the tile and api urls if they are left unset        |
 | `[options.apiUrl]`           | String  | _optional:_                                                                            |
 | `[options.tileUrl]`          | String  | _optional:_                                                                            |
 | `[options.connectivityType]` | String  | _optional:_                                                                            |
@@ -29,7 +30,8 @@ Create an instance of Analyst.js for use with single point requests.
 ```js
 const analyst = new Analyst(window.L, {
   apiUrl: 'http://localhost:3000/api',
-  tileUrl: 'http://localhost:4000/tile'
+  tileUrl: 'http://localhost:4000/tile',
+  baseUrl: 'http://localhost:3000'
 })
 ```
 
@@ -129,6 +131,39 @@ analyst
 
 
 **Returns** `Promise`, Resolves with an array containing `[results, comparisonResults]`
+
+
+### `setClientCredentials(clientCredentials)`
+
+Set the client credentials for this analyst.js instance
+
+### Parameters
+
+| parameter           | type   | description |
+| ------------------- | ------ | ----------- |
+| `clientCredentials` | String |             |
+
+
+
+### `obtainClientCredentials(key, secret, refresh)`
+
+Get client credentials for this instance, optionally keeping them up-to-date automatically.
+Note that using this function on the client side requires your API key and secret to be sent to the client, which
+is non-ideal; a better pattern would be to keep the API key/secret on the server and only retrieve client credentials
+there, and then deliver only the client credentials to the client. Client credentials have a limited time to live,
+so they are less sensitive than API keys.
+
+### Parameters
+
+| parameter | type    | description                                                                               |
+| --------- | ------- | ----------------------------------------------------------------------------------------- |
+| `key`     | String  | Your API key                                                                              |
+| `secret`  | String  | Your API secret                                                                           |
+| `refresh` | boolean | if true (default), automatically update client credentials when they are about to expire. |
+
+
+
+**Returns** `h`, client credentials. They will also be set as the client credentials for this analyst instance.
 
 ## Installation
 

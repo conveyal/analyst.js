@@ -23,17 +23,12 @@
   <script src="analyst.js"></script>
   <script>
     var Analyst = window.Analyst
-    var analyst = new Analyst(window.L, {
-      apiUrl: 'http://mit-analyst.conveyal.com/api',
-      tileUrl: 'http://mit-analyst.conveyal.com/tile',
-      showIso: true,
-      requestOptions: {
-        shapefileId: '0579b6bd8e14ec69e4f21e96527a684b_376500e5f8ac23d1664902fbe2ffc364',
-        graphId: '786999ef0720eff08c48115c3613de2d'
-      }
+    window.analyst = new Analyst(window.L, {
+      baseUrl: 'http://localhost:9090',
+      showIso: true
     })
 
-    var startLoc = [42.35, -71.1]
+    var startLoc = [34.42, -119.7]
 
     var map = L.map('map').setView(startLoc, 12)
 
@@ -50,7 +45,7 @@
       .addTo(map)
       .on('dragend', function (e) {
         analyst
-          .singlePointRequest(marker.getLatLng())
+          .singlePointRequest(marker.getLatLng(), '1f99f76f18ac8e8241dd5899d54cb26e', 'b2ff4e00fc1052406782766c951545e1_f71712b99380bf6d7ae6c4a1ad5fd035')
           .then(function (response) {
             const spl = analyst.updateSinglePointLayer(response.key)
             if (isoLayer) {
