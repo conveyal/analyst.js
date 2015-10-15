@@ -209,7 +209,7 @@ export default class Analyst {
 
     const params = {
       host,
-      path: `${path}?grant_type=client_credentials&key=${encodeURIComponent(key)}&secret=${encodeURIComponent(secret)}`,
+      path,
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -241,6 +241,9 @@ export default class Analyst {
       }))
     })
 
+    req.write('grant_type=client_credentials&')
+    req.write(`key=${encodeURIComponent(key)}&`)
+    req.write(`secret=${encodeURIComponent(secret)}`)
     req.end()
   }
 
