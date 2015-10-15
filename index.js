@@ -56,11 +56,13 @@ export default class Analyst {
     this.tileUrl = opts.tileUrl
     this.baseUrl = opts.baseUrl
 
-    if (this.apiUrl === undefined)
+    if (this.apiUrl === undefined) {
       this.apiUrl = `${this.baseUrl}/api`
+    }
 
-    if (this.tileUrl === undefined)
+    if (this.tileUrl === undefined) {
       this.tileUrl = `${this.baseUrl}/tile`
+    }
 
     this.connectivityType = opts.connectivityType || 'AVERAGE'
     this.timeLimit = opts.timeLimit || 3600
@@ -146,15 +148,15 @@ export default class Analyst {
 
     debug(`making single point request to [${point.lng}, ${point.lat}]`, opts)
     return this.post(this.apiUrl + '/single', {
-        destinationPointsetId: shapefileId,
-        graphId: graphId,
-        profileRequest: opts
-      })
-      .then((data) => {
-        debug('single point request successful')
+      destinationPointsetId: shapefileId,
+      graphId: graphId,
+      profileRequest: opts
+    })
+    .then((data) => {
+      debug('single point request successful')
 
-        return data
-      })
+      return data
+    })
   }
 
   /**
@@ -172,143 +174,146 @@ export default class Analyst {
    *   })
    */
 
-   singlePointComparison (point, options, comparisonOptions) {
-     return Promise.all([
+  singlePointComparison (point, options, comparisonOptions) {
+    return Promise.all([
       this.singlePointRequest(point, options.graphId, options.shapefileId, options),
-      this.singlePointRequest(point, comparisonOptions.graphId, comparisonOptions.shapefileId, comparisonOptions)])
-   }
+      this.singlePointRequest(point, comparisonOptions.graphId, comparisonOptions.shapefileId, comparisonOptions)
+    ])
+  }
 
-   /**
-    * Set the client credentials for this analyst.js instance
-    * @param {String} clientCredentials
-    */
-    setClientCredentials (clientCredentials) {
-      this.clientCredentials = clientCredentials
+  /**
+   * Set the client credentials for this analyst.js instance
+   * @param {String} clientCredentials
+   */
+
+  setClientCredentials (clientCredentials) {
+    this.clientCredentials = clientCredentials
+  }
+
+  /**
+   * Get client credentials for this instance, optionally keeping them up-to-date automatically.
+   * Note that using this function on the client side requires your API key and secret to be sent to the client, which
+   * is non-ideal; a better pattern would be to keep the API key/secret on the server and only retrieve client credentials
+   * there, and then deliver only the client credentials to the client, setting them using setClientCredentials.
+   * Client credentials have a limited time to live, so they are less sensitive than API keys.
+   *
+   * @param {String} key Your API key
+   * @param {String} secret Your API secret
+   * @param {boolean} refresh if true (default), automatically update client credentials when they are about to expire.
+   * @return the client credentials. They will also be set as the client credentials for this analyst instance.
+   */
+
+  obtainClientCredentials (key, secret, refresh = true) {
+    const url = `${this.baseUrl}/oauth/token`
+    const [, proto, host, port, path] = url.match(getHostPortAndPath)
+
+    const params = {
+      host,
+      path: `${path}?grant_type=client_credentials&key=${encodeURIComponent(key)}&secret=${encodeURIComponent(secret)}`,
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      withCredentials: false
     }
 
-    /**
-     * Get client credentials for this instance, optionally keeping them up-to-date automatically.
-     * Note that using this function on the client side requires your API key and secret to be sent to the client, which
-     * is non-ideal; a better pattern would be to keep the API key/secret on the server and only retrieve client credentials
-     * there, and then deliver only the client credentials to the client, setting them using setClientCredentials.
-     * Client credentials have a limited time to live, so they are less sensitive than API keys.
-     
-     * @param {String} key Your API key
-     * @param {String} secret Your API secret
-     * @param {boolean} refresh if true (default), automatically update client credentials when they are about to expire.
-     * @return the client credentials. They will also be set as the client credentials for this analyst instance.
-     */
-     obtainClientCredentials (key, secret, refresh = true) {
-       const url = `${this.baseUrl}/oauth/token`
-       const [, proto, host, port, path] = url.match(getHostPortAndPath)
-       const instance = this;
+    if (port !== undefined) {
+      params.port = port
+    } else if (proto.toLowerCase() === 'https') {
+      debug('https')
+      params.port = 443
+    }
 
-       const params = {
-         host,
-         path,
-         method: 'POST',
-         headers: {
-           'Accept': 'application/json',
-           'Content-Type': 'application/x-www-form-urlencoded'
-         },
-         withCredentials: false
-       }
+    const req = http.request(params, (res) => {
+      res.pipe(concat((data) => {
+        const parsed = JSON.parse(data)
+        this.setClientCredentials(parsed.access_token)
 
-       if (port !== undefined) params.port = port
-       else if (proto.toLowerCase() == 'https') {
-         debug('https');
-         params.port = 443;
-       }
+        // get new credentials two minutes before these expire
+        // note: does not create tail recursion problems as setTimeout puts it in a global executor loop and
+        // the call to obtainClientCredentials does not inherit the scope of the parent
+        if (refresh) {
+          setTimeout(() => {
+            this.obtainClientCredentials(key, secret, true)
+          }, (parsed.expires_in - 120) * 1000)
+        }
+      }))
+    })
 
-       const req = http.request(params, (res) => {
-         res.pipe(concat((data) => {
-           let parsed = JSON.parse(data)
-           instance.setClientCredentials(parsed.access_token)
+    req.end()
+  }
 
-           // get new credentials two minutes before these expire
-           // note: does not create tail recursion problems as setTimeout puts it in a global executor loop and
-           // the call to obtainClientCredentials does not inherit the scope of the parent
-           if (refresh)
-             setTimeout(() => {
-               instance.obtainClientCredentials(key, secret, true);
-             }, (parsed.expires_in - 120) * 1000)
-         }))
-       })
+  post (url, data) {
+    return new Promise((resolve, reject) => {
+      let [, , host, port, path] = url.match(getHostPortAndPath)
 
-       req.write("grant_type=client_credentials&")
-       req.write(`key=${encodeURIComponent(key)}&`)
-       req.write(`secret=${encodeURIComponent(secret)}`)
-       req.end()
-     }
+      if (this.clientCredentials !== undefined) {
+        if (path.indexOf('?') !== -1) {
+          path += `&accessToken=${this.clientCredentials}`
+        } else {
+          path += `?accessToken=${this.clientCredentials}`
+        }
+      }
 
-     post (url, data) {
-       return new Promise((resolve, reject) => {
-         let [, , host, port, path] = url.match(getHostPortAndPath)
+      const params = {
+        host,
+        path,
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        withCredentials: false
+      }
 
-         if (this.clientCredentials !== undefined) {
-           if (path.indexOf('?') !== -1)
-             path += `&accessToken=${this.clientCredentials}`
-           else
-             path += `?accessToken=${this.clientCredentials}`
-         }
+      if (port !== undefined) params.port = port
 
-         const params = {
-           host,
-           path,
-           method: 'POST',
-           headers: {
-             'Accept': 'application/json',
-             'Content-Type': 'application/json'
-           },
-           withCredentials: false
-         }
+      debug('POST', params)
+      const req = http.request(params, (res) => {
+        res.on('error', reject)
+        res.pipe(concat((data) => {
+          resolve(JSON.parse(data))
+        }))
+      })
 
-         if (port !== undefined) params.port = port
+      req.on('error', reject)
+      req.write(JSON.stringify(data))
+      req.end()
+    })
+  }
 
-         debug('POST', params)
-         const req = http.request(params, (res) => {
-           res.on('error', reject)
-           res.pipe(concat((data) => {
-             resolve(JSON.parse(data))
-           }))
-         })
+  get (url) {
+    return new Promise((resolve, reject) => {
+      let [, , host, port, path] = url.match(getHostPortAndPath)
 
-         req.on('error', reject)
-         req.write(JSON.stringify(data))
-         req.end()
-       })
-     }
+      if (this.clientCredentials !== undefined) {
+        if (path.indexOf('?') !== -1) {
+          path += `&accessToken=${this.clientCredentials}`
+        } else {
+          path += `?accessToken=${this.clientCredentials}`
+        }
+      }
 
-     get (url) {
-       return new Promise((resolve, reject) => {
-         let [, , host, port, path] = url.match(getHostPortAndPath)
+      const params = {
+        host,
+        path,
+        method: 'GET',
+        headers: {},
+        withCredentials: false
+      }
 
-         if (this.clientCredentials !== undefined) {
-           if (path.indexOf('?') !== -1)
-             path += `&accessToken=${this.clientCredentials}`
-           else
-             path += `?accessToken=${this.clientCredentials}`
-         }
+      if (port !== undefined) params.port = port
 
-         const params = {
-           host,
-           path,
-           method: 'GET',
-           headers: {},
-           withCredentials: false
-         }
-
-         if (port !== undefined) params.port = port
-
-         http.request(params, (res) => {
-           res.on('error', reject)
-           res.pipe(concat((data) => {
-             resolve(JSON.parse(data))
-           }))
-         }).on('error', reject)
-         .end()
-       })
-     }
+      http.request(params, (res) => {
+        res.on('error', reject)
+        res.pipe(concat((data) => {
+          resolve(JSON.parse(data))
+        }))
+      }).on('error', reject)
+       .end()
+    })
+  }
 }
 
 const getHostPortAndPath = new RegExp('^(.*)://([A-Za-z0-9\-\.]+):([0-9]+)?(.*)$')
