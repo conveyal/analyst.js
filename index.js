@@ -1,6 +1,6 @@
 import concat from 'concat-stream'
 import dbg from 'debug'
-import http from 'http'
+import http from 'https'
 
 const LAYER_DEFAULTS = {}
 
@@ -204,47 +204,59 @@ export default class Analyst {
    */
 
   obtainClientCredentials (key, secret, refresh = true) {
-    const url = `${this.baseUrl}/oauth/token`
-    const [, proto, host, port, path] = url.match(getHostPortAndPath)
+    return new Promise((resolve, reject) => {
+      const url = `${this.baseUrl}/oauth/token`
+      const [, proto, host, port, path] = url.match(getHostPortAndPath)
 
-    const params = {
-      host,
-      path,
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      withCredentials: false
-    }
+      const params = {
+        host,
+        path,
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        withCredentials: false
+      }
 
-    if (port !== undefined) {
-      params.port = port
-    } else if (proto.toLowerCase() === 'https') {
-      debug('https')
-      params.port = 443
-    }
+      if (port !== undefined) {
+        params.port = port
+      } else if (proto.toLowerCase() === 'https') {
+        debug('https')
+        params.port = 443
+      }
 
-    const req = http.request(params, (res) => {
-      res.pipe(concat((data) => {
-        const parsed = JSON.parse(data)
-        this.setClientCredentials(parsed.access_token)
+      const req = http.request(params, (res) => {
+        res.on('error', reject)
+        res.pipe(concat((data) => {
+          const parsed = JSON.parse(data)
+          this.setClientCredentials(parsed.access_token)
+          resolve(parsed)
 
-        // get new credentials two minutes before these expire
-        // note: does not create tail recursion problems as setTimeout puts it in a global executor loop and
-        // the call to obtainClientCredentials does not inherit the scope of the parent
-        if (refresh) {
-          setTimeout(() => {
-            this.obtainClientCredentials(key, secret, true)
-          }, (parsed.expires_in - 120) * 1000)
-        }
-      }))
+          // get new credentials two minutes before these expire
+          // note: does not create tail recursion problems as setTimeout puts it in a global executor loop and
+          // the call to obtainClientCredentials does not inherit the scope of the parent
+          if (refresh) {
+            setTimeout(() => {
+              this.obtainClientCredentials(key, secret, true)
+                .then(() => {
+                  debug('refreshed client credentials')
+                })
+                .catch(e => {
+                  debug('failed to refresh client credentials')
+                  console.error(e)
+                })
+            }, (parsed.expires_in - 120) * 1000)
+          }
+        }))
+      })
+
+      req.on('error', reject)
+      req.write('grant_type=client_credentials&')
+      req.write(`key=${encodeURIComponent(key)}&`)
+      req.write(`secret=${encodeURIComponent(secret)}`)
+      req.end()
     })
-
-    req.write('grant_type=client_credentials&')
-    req.write(`key=${encodeURIComponent(key)}&`)
-    req.write(`secret=${encodeURIComponent(secret)}`)
-    req.end()
   }
 
   post (url, data) {
