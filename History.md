@@ -1,4 +1,8 @@
 
+## 0.1.0 — 2015-10-26
+
+* Check a compiled version into npm.
+
 ## 0.0.7 — 2015-06-24
 
 * Remove `shapefileId` and `graphId` from default class options. Used on per request basis now.

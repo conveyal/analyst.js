@@ -1,8 +1,8 @@
 {
   "name": "analyst.js",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Lightweight client library for making requests to Analyst Server",
-  "main": "index.js",
+  "main": "build/index",
   "browserify": {
     "transform": [
       "babelify"
@@ -12,7 +12,8 @@
     "build": "browserify -s Analyst index.js > analyst.js",
     "develop": "watchify -v -s Analyst index.js -o analyst.js",
     "docs": "dox -r < index.js | doxme --readme > README.md",
-    "lint": "standard index.js",
+    "lint": "standard",
+    "prepublish": "make",
     "test": "serve"
   },
   "repository": {
@@ -41,6 +42,7 @@
     "watchify": "^3.2.0"
   },
   "dependencies": {
+    "babel-runtime": "^5.8.29",
     "concat-stream": "^1.5.0",
     "debug": "^2.2.0"
   }
