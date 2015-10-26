@@ -1,8 +1,8 @@
 {
   "name": "analyst.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lightweight client library for making requests to Analyst Server",
-  "main": "build/index",
+  "main": "./build/index",
   "browserify": {
     "transform": [
       "babelify"
