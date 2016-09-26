@@ -38,7 +38,7 @@
     "doxme": "^1.8.2",
     "leaflet": "^0.7.3",
     "serve": "^1.4.0",
-    "standard": "^8.1.0",
+    "standard": "^8.2.0",
     "watchify": "^3.2.0"
   },
   "dependencies": {
